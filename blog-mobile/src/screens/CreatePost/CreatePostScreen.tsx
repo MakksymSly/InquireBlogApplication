@@ -4,7 +4,6 @@ import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { scale } from '../../utils/scale';
 
 export const CreatePostScreen = () => {
-  const x: number = 'not a number';
   return (
     <ScreenWrapper header="Create Post" withBackIcon>
       <Text style={styles.title}>Create Post Screen</Text>
