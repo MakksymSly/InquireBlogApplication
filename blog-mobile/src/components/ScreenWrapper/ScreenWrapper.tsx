@@ -39,11 +39,8 @@ export function ScreenWrapper({
       {!withoutHeader && (
         <View style={styles.headerContainer}>
           {withBackIcon && (
-            <Pressable
-              onPress={goBack || navigation.goBack}
-              style={styles.backButton}
-            >
-              <ArrowLeftIcon color="black" /> 
+            <Pressable onPress={goBack || navigation.goBack} style={styles.backButton}>
+              <ArrowLeftIcon color="black" />
             </Pressable>
           )}
           {header && <Text style={styles.headerText}>{header}</Text>}
@@ -52,9 +49,7 @@ export function ScreenWrapper({
 
       <View style={[styles.content, style]}>
         {scrollEnable ? (
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {children}
-          </ScrollView>
+          <ScrollView showsVerticalScrollIndicator={false}>{children}</ScrollView>
         ) : (
           children
         )}

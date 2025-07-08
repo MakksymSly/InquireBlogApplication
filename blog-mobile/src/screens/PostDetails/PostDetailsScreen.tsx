@@ -5,13 +5,11 @@ import { scale } from '../../utils/scale';
 
 export const PostDetailsScreen = () => {
   return (
-    <ScreenWrapper header="Post Details">
+    <ScreenWrapper header="Post Details" withBackIcon>
       <Text style={styles.title}>Post Details Screen</Text>
     </ScreenWrapper>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {

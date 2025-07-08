@@ -14,11 +14,10 @@ export const PostsListScreen = () => {
       <Text style={styles.title}>Posts List Screen</Text>
 
       <Button title="Go to Create Post" onPress={() => navigation.navigate('CreatePost')} />
+      <Button title="Go to Post Details" onPress={() => navigation.navigate('PostDetails')} />
     </ScreenWrapper>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {

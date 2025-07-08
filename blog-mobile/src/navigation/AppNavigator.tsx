@@ -7,6 +7,7 @@ import { PostDetailsScreen } from '../screens/PostDetails';
 export type RootStackParamList = {
   PostsList: undefined;
   CreatePost: undefined;
+  PostDetails: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -15,8 +16,21 @@ const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="PostsList">
-        <Stack.Screen name="PostsList" component={PostsListScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="PostsList"
+          component={PostsListScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CreatePost"
+          component={CreatePostScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PostDetails"
+          component={PostDetailsScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
