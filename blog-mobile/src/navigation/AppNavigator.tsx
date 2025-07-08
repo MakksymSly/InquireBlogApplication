@@ -1,36 +1,56 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { PostsListScreen } from '../screens/PostsList';
-import { CreatePostScreen } from '../screens/CreatePost';
+
+import { PostListScreen } from '../screens/PostsList';
 import { PostDetailsScreen } from '../screens/PostDetails';
+import { CreatePostScreen } from '../screens/CreatePost';
+import { InfoScreen } from '../screens/Info';
+import { ListIcon, InfoIcon } from '../assets/icons';
+
 export type RootStackParamList = {
-  PostsList: undefined;
+  Tabs: undefined;
+  PostDetails: { postId: number };
   CreatePost: undefined;
-  PostDetails: undefined;
+};
+
+export type TabParamList = {
+  Posts: undefined;
+  Info: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
+
+const Tabs = () => {
+  return (
+    <Tab.Navigator screenOptions={{ headerShown: false }}>
+      <Tab.Screen
+        name="Posts"
+        component={PostListScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <ListIcon color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Info"
+        component={InfoScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <InfoIcon color={color} size={size} />,
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
 
 const AppNavigator = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="PostsList">
-        <Stack.Screen
-          name="PostsList"
-          component={PostsListScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="CreatePost"
-          component={CreatePostScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="PostDetails"
-          component={PostDetailsScreen}
-          options={{ headerShown: false }}
-        />
+      <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Tabs" component={Tabs} />
+        <Stack.Screen name="PostDetails" component={PostDetailsScreen} />
+        <Stack.Screen name="CreatePost" component={CreatePostScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
