@@ -20,15 +20,17 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { scale } from '../../../utils/scale';
 import { PostForm, postSchema } from '../../../schemas/post.schema';
+import { Post } from '../../../types/Post';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
   onSubmit: (data: PostForm) => void;
+  editingPost?: Post | null;
 }
 
 export const AddPostModal = (props: Props) => {
-  const { visible, onClose, onSubmit } = props;
+  const { visible, onClose, onSubmit, editingPost } = props;
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(300);
   const isVisible = useSharedValue(false);
@@ -41,10 +43,37 @@ export const AddPostModal = (props: Props) => {
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors },
   } = useForm<PostForm>({
     resolver: zodResolver(postSchema),
+    defaultValues: editingPost ?? {
+      title: '',
+      content: '',
+    },
   });
+
+  const titleValue = watch('title');
+  const contentValue = watch('content');
+
+  useEffect(() => {
+    if (editingPost) {
+      setValue('title', editingPost.title);
+      setValue('content', editingPost.content || '');
+    } else {
+      setValue('title', '');
+      setValue('content', '');
+    }
+  }, [editingPost, setValue]);
+
+  useEffect(() => {
+    if (visible && !editingPost) {
+      reset({
+        title: '',
+        content: '',
+      });
+    }
+  }, [visible, editingPost, reset]);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -65,19 +94,26 @@ export const AddPostModal = (props: Props) => {
       Keyboard.dismiss();
     } else {
       isVisible.value = false;
-      fadeAnim.value = withTiming(0, { duration: 300 });
-      slideAnim.value = withTiming(300, { duration: 300 }, () => {
+      fadeAnim.value = withTiming(0, { duration: 200 });
+      slideAnim.value = withTiming(300, { duration: 200 }, () => {
         runOnJS(onClose)();
       });
     }
+  };
+
+  const forceClose = () => {
+    isVisible.value = false;
+    fadeAnim.value = 0;
+    slideAnim.value = 300;
+    onClose();
   };
 
   const handleSubmitForm = async (data: PostForm) => {
     setLoading(true);
     try {
       await onSubmit(data);
-      handleClose();
     } catch (e) {
+      console.error('Error in form submission:', e);
     } finally {
       setLoading(false);
     }
@@ -94,9 +130,16 @@ export const AddPostModal = (props: Props) => {
   useEffect(() => {
     if (!visible) {
       setLoading(false);
-      reset();
+      reset({
+        title: '',
+        content: '',
+      });
+
+      if (isVisible.value) {
+        forceClose();
+      }
     }
-  }, [visible, reset]);
+  }, [visible, reset, isVisible.value]);
 
   const containerAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -121,6 +164,7 @@ export const AddPostModal = (props: Props) => {
               <Text style={styles.label}>Title</Text>
               <TextInput
                 style={styles.input}
+                value={titleValue}
                 onChangeText={text => setValue('title', text)}
                 placeholder="Post title"
                 editable={!loading}
@@ -130,6 +174,7 @@ export const AddPostModal = (props: Props) => {
               <Text style={styles.label}>Content</Text>
               <TextInput
                 style={[styles.input, { height: scale(100) }]}
+                value={contentValue}
                 onChangeText={text => setValue('content', text)}
                 placeholder="Post content"
                 multiline
@@ -149,7 +194,15 @@ export const AddPostModal = (props: Props) => {
                   onPress={handleSubmit(handleSubmitForm)}
                   disabled={loading}
                 >
-                  <Text style={styles.buttonText}>{loading ? 'Adding...' : 'Add Post'}</Text>
+                  <Text style={styles.buttonText}>
+                    {loading
+                      ? editingPost
+                        ? 'Updating...'
+                        : 'Adding...'
+                      : editingPost
+                        ? 'Update Post'
+                        : 'Add Post'}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.button, styles.cancelButton]}

@@ -19,7 +19,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { getPosts } from '../../api/posts';
 import { AddPostModal } from './components/AddPostModal';
-import { createPost } from '../../api/posts';
+import { createPost, updatePost } from '../../api/posts';
 import { PostForm } from '../../schemas/post.schema';
 import { PlusIcon, SearchIcon } from '../../assets/icons';
 
@@ -30,7 +30,7 @@ export const PostListScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [modalVisible, setModalVisible] = useState(false);
-
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
   const filteredPosts = useMemo(() => {
     if (!searchQuery.trim()) {
       return posts;
@@ -61,13 +61,45 @@ export const PostListScreen = () => {
   const onPostPress = (item: Post) => {
     navigation.navigate('PostDetails', { postId: item.id });
   };
+  const onPostDelete = (id: number) => {
+    try {
+      setPosts(posts.filter(post => post.id !== id));
+      if (editingPost && editingPost.id === id) {
+        setModalVisible(false);
+        setEditingPost(null);
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+
+      setModalVisible(false);
+      setEditingPost(null);
+    }
+  };
+  const onPostEdit = (post: Post) => {
+    setEditingPost(post);
+    setModalVisible(true);
+  };
   const handleCreatePost = async (data: PostForm) => {
     try {
-      const newPost = await createPost(data);
-      setPosts([newPost, ...posts]);
-      setModalVisible(false);
+      if (editingPost) {
+        await updatePost(editingPost.id, data);
+        setPosts(
+          posts.map(p =>
+            p.id === editingPost.id ? { ...p, title: data.title, content: data.content } : p,
+          ),
+        );
+        setModalVisible(false);
+        setEditingPost(null);
+      } else {
+        const newPost = await createPost(data);
+        setPosts([newPost, ...posts]);
+        setModalVisible(false);
+      }
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error('Error creating/updating post:', error);
+
+      setModalVisible(false);
+      setEditingPost(null);
     }
   };
   return (
@@ -113,7 +145,13 @@ export const PostListScreen = () => {
                 data={filteredPosts}
                 keyExtractor={item => item.id.toString()}
                 renderItem={({ item }) => (
-                  <PostCard onPress={() => onPostPress(item)} post={item} />
+                  <PostCard
+                    onPress={() => onPostPress(item)}
+                    post={item}
+                    onDelete={onPostDelete}
+                    onEdit={onPostEdit}
+                    hideActions={modalVisible}
+                  />
                 )}
                 refreshing={loading}
               />
@@ -122,8 +160,13 @@ export const PostListScreen = () => {
 
           <AddPostModal
             visible={modalVisible}
-            onClose={() => setModalVisible(false)}
+            onClose={() => {
+              setModalVisible(false);
+              setEditingPost(null);
+            }}
             onSubmit={handleCreatePost}
+            editingPost={editingPost}
+            key={`modal-${modalVisible}-${editingPost?.id || 'new'}`}
           />
         </View>
       </TouchableWithoutFeedback>
