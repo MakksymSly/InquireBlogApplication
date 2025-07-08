@@ -1,1 +1,2 @@
-export * from './PostCard/PostCard';
+export * from './PostCard';
+export * from './AddPostModal';

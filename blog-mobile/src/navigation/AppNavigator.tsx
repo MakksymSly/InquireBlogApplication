@@ -5,7 +5,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { PostListScreen } from '../screens/PostsList';
 import { PostDetailsScreen } from '../screens/PostDetails';
-import { CreatePostScreen } from '../screens/CreatePost';
 import { InfoScreen } from '../screens/Info';
 import { ListIcon, InfoIcon } from '../assets/icons';
 
@@ -50,7 +49,6 @@ const AppNavigator = () => {
       <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Tabs" component={Tabs} />
         <Stack.Screen name="PostDetails" component={PostDetailsScreen} />
-        <Stack.Screen name="CreatePost" component={CreatePostScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
