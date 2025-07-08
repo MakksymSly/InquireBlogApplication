@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Modal,
   View,
-  TextInput,
-  StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Alert,
   TouchableWithoutFeedback,
   Keyboard,
   ActivityIndicator,
@@ -16,64 +17,29 @@ import Animated, {
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { scale } from '../../../utils/scale';
-import { PostForm, postSchema } from '../../../schemas/post.schema';
-import { Post } from '../../../types/Post';
+import { createCommentSchema } from '../../../schemas/comment.schema';
 
-interface Props {
+interface AddCommentModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: PostForm) => void;
-  editingPost?: Post | null;
+  onSubmit: (author: string, text: string) => void;
+  isLoading?: boolean;
 }
 
-export const AddPostModal = (props: Props) => {
-  const { visible, onClose, onSubmit, editingPost } = props;
+export const AddCommentModal: React.FC<AddCommentModalProps> = ({
+  visible,
+  onClose,
+  onSubmit,
+  isLoading = false,
+}) => {
+  const [author, setAuthor] = useState('');
+  const [text, setText] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(300);
   const isVisible = useSharedValue(false);
-
-  const [loading, setLoading] = useState(false);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    watch,
-    formState: { errors },
-  } = useForm<PostForm>({
-    resolver: zodResolver(postSchema),
-    defaultValues: editingPost ?? {
-      title: '',
-      content: '',
-    },
-  });
-
-  const titleValue = watch('title');
-  const contentValue = watch('content');
-
-  useEffect(() => {
-    if (editingPost) {
-      setValue('title', editingPost.title);
-      setValue('content', editingPost.content || '');
-    } else {
-      setValue('title', '');
-      setValue('content', '');
-    }
-  }, [editingPost, setValue]);
-
-  useEffect(() => {
-    if (visible && !editingPost) {
-      reset({
-        title: '',
-        content: '',
-      });
-    }
-  }, [visible, editingPost, reset]);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -108,16 +74,36 @@ export const AddPostModal = (props: Props) => {
     onClose();
   };
 
-  const handleSubmitForm = async (data: PostForm) => {
-    setLoading(true);
+  const handleSubmit = () => {
     try {
-      await onSubmit(data);
-    } catch (e) {
-      console.error('Error in form submission:', e);
-    } finally {
-      setLoading(false);
+      const validatedData = createCommentSchema.parse({
+        author: author.trim(),
+        text: text.trim(),
+        postId: 1,
+      });
+
+      onSubmit(validatedData.author, validatedData.text);
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert('Validation Error', error.message);
+      } else {
+        Alert.alert('Error', 'Please check your input');
+      }
     }
   };
+
+  const handleCloseAndReset = () => {
+    setAuthor('');
+    setText('');
+    handleClose();
+  };
+
+  useEffect(() => {
+    if (!visible) {
+      setAuthor('');
+      setText('');
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (visible) {
@@ -129,14 +115,9 @@ export const AddPostModal = (props: Props) => {
 
   useEffect(() => {
     if (!visible) {
-      setLoading(false);
-      reset({
-        title: '',
-        content: '',
-      });
       forceClose();
     }
-  }, [visible, reset]);
+  }, [visible]);
 
   const containerAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -158,55 +139,45 @@ export const AddPostModal = (props: Props) => {
         <Animated.View style={[styles.container, containerAnimatedStyle]}>
           <TouchableWithoutFeedback onPress={() => {}}>
             <Animated.View style={[styles.modalContent, modalAnimatedStyle]}>
-              <Text style={styles.label}>Title</Text>
+              <Text style={styles.label}>Name</Text>
               <TextInput
                 style={styles.input}
-                value={titleValue}
-                onChangeText={text => setValue('title', text)}
-                placeholder="Post title"
+                placeholder="Your name"
                 placeholderTextColor="#999"
-                editable={!loading}
+                value={author}
+                onChangeText={setAuthor}
+                maxLength={50}
+                editable={!isLoading}
               />
-              {errors.title && <Text style={styles.error}>{errors.title.message}</Text>}
 
-              <Text style={styles.label}>Content</Text>
+              <Text style={styles.label}>Comment</Text>
               <TextInput
                 style={[styles.input, { height: scale(100) }]}
-                value={contentValue}
-                onChangeText={text => setValue('content', text)}
-                placeholder="Post content"
+                placeholder="Comment text..."
                 placeholderTextColor="#999"
+                value={text}
+                onChangeText={setText}
                 multiline
-                editable={!loading}
+                numberOfLines={4}
+                maxLength={500}
+                textAlignVertical="top"
+                editable={!isLoading}
               />
-              {errors.content && <Text style={styles.error}>{errors.content.message}</Text>}
 
-              {loading && (
+              {isLoading && (
                 <View style={{ alignItems: 'center', marginVertical: 10 }}>
                   <ActivityIndicator size="small" color="#007AFF" />
                 </View>
               )}
 
               <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={handleSubmit(handleSubmitForm)}
-                  disabled={loading}
-                >
-                  <Text style={styles.buttonText}>
-                    {loading
-                      ? editingPost
-                        ? 'Updating...'
-                        : 'Adding...'
-                      : editingPost
-                        ? 'Update Post'
-                        : 'Add Post'}
-                  </Text>
+                <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={isLoading}>
+                  <Text style={styles.buttonText}>{isLoading ? 'Adding...' : 'Add Comment'}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.button, styles.cancelButton]}
-                  onPress={handleClose}
-                  disabled={loading}
+                  onPress={handleCloseAndReset}
+                  disabled={isLoading}
                 >
                   <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancel</Text>
                 </TouchableOpacity>
@@ -242,6 +213,11 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  label: {
+    marginBottom: scale(5),
+    fontWeight: '600',
+    color: '#333',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -251,16 +227,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     fontSize: scale(16),
     color: '#333',
-  },
-  label: {
-    marginBottom: scale(5),
-    fontWeight: '600',
-    color: '#333',
-  },
-  error: {
-    color: 'red',
-    marginBottom: scale(10),
-    fontSize: scale(12),
   },
   buttonContainer: {
     flexDirection: 'row',

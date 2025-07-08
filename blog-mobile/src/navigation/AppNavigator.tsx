@@ -5,12 +5,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { PostListScreen } from '../screens/PostsList';
 import { PostDetailsScreen } from '../screens/PostDetails';
+import { CommentsListScreen } from '../screens/CommentsList/CommentsListScreen';
 import { InfoScreen } from '../screens/Info';
 import { ListIcon, InfoIcon } from '../assets/icons';
 
 export type RootStackParamList = {
   Tabs: undefined;
   PostDetails: { postId: number };
+  CommentsList: { postId: number; postTitle: string };
   CreatePost: undefined;
 };
 
@@ -49,6 +51,7 @@ const AppNavigator = () => {
       <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Tabs" component={Tabs} />
         <Stack.Screen name="PostDetails" component={PostDetailsScreen} />
+        <Stack.Screen name="CommentsList" component={CommentsListScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

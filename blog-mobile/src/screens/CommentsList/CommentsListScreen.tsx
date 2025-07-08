@@ -1,0 +1,134 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
+import { useRoute } from '@react-navigation/native';
+import { ScreenWrapper } from '../../components/ScreenWrapper/ScreenWrapper';
+import { usePostStore } from '../../store/usePostStore';
+import { useCommentStore } from '../../store/useCommentStore';
+import { CommentItem } from '../PostDetails/components/CommentItem';
+import { getComments, deleteComment } from '../../api/comments';
+import { scale } from '../../utils/scale';
+
+import type { RouteProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../../navigation/AppNavigator';
+
+type CommentsListRouteProp = RouteProp<RootStackParamList, 'CommentsList'>;
+
+export const CommentsListScreen = () => {
+  const route = useRoute<CommentsListRouteProp>();
+  const { postId, postTitle } = route.params;
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const post = usePostStore(state => state.posts.find(post => post.id === postId));
+  const { comments, setComments, removeComment } = useCommentStore();
+
+  useEffect(() => {
+    loadComments();
+  }, [postId]);
+
+  const loadComments = async () => {
+    try {
+      setIsLoading(true);
+      const fetchedComments = await getComments(postId);
+      setComments(fetchedComments);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+      if (error instanceof Error) {
+        Alert.alert('Error', `Failed to load comments: ${error.message}`);
+      } else {
+        Alert.alert('Error', 'Failed to load comments');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    Alert.alert('Confirm', 'Are you sure you want to delete this comment?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteComment(commentId);
+            removeComment(commentId);
+            Alert.alert('Success', 'Comment deleted successfully!');
+          } catch (error) {
+            Alert.alert('Error', 'Failed to delete comment');
+            console.error('Error deleting comment:', error);
+          }
+        },
+      },
+    ]);
+  };
+
+  if (!post) {
+    return (
+      <ScreenWrapper header="Comments">
+        <Text style={styles.errorText}>Post not found</Text>
+      </ScreenWrapper>
+    );
+  }
+
+  const renderComment = ({ item }: { item: any }) => (
+    <CommentItem comment={item} onDelete={handleDeleteComment} />
+  );
+
+  return (
+    <ScreenWrapper header={`Comments (${comments.length})`} withBackIcon>
+      <View style={styles.container}>
+        <Text style={styles.postTitle}>{postTitle}</Text>
+
+        {isLoading ? (
+          <Text style={styles.loadingText}>Loading comments...</Text>
+        ) : comments.length === 0 ? (
+          <Text style={styles.emptyText}>No comments yet.</Text>
+        ) : (
+          <FlatList
+            data={comments}
+            renderItem={renderComment}
+            keyExtractor={item => item.id.toString()}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.commentsListContent}
+          />
+        )}
+      </View>
+    </ScreenWrapper>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  postTitle: {
+    fontSize: scale(16),
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: scale(16),
+    paddingHorizontal: scale(16),
+  },
+  commentsListContent: {
+    paddingHorizontal: scale(16),
+    paddingBottom: scale(20),
+  },
+  loadingText: {
+    textAlign: 'center',
+    fontSize: scale(14),
+    color: '#666',
+    padding: scale(20),
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: scale(14),
+    color: '#666',
+    padding: scale(20),
+    fontStyle: 'italic',
+  },
+  errorText: {
+    fontSize: scale(16),
+    color: 'red',
+    padding: scale(10),
+  },
+});

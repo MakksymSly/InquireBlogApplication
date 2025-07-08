@@ -27,4 +27,18 @@ export class CommentsService {
 
     return this.commentRepository.save(comment);
   }
+
+  async findByPost(postId: number) {
+    return this.commentRepository.find({
+      where: { post: { id: postId } },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async remove(id: number) {
+    const comment = await this.commentRepository.findOneBy({ id });
+    if (!comment) throw new NotFoundException('Comment not found');
+
+    return this.commentRepository.delete(id);
+  }
 }

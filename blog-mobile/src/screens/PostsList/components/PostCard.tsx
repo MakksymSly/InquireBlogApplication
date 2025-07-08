@@ -106,8 +106,15 @@ export const PostCard: React.FC<Props> = props => {
           },
         ]}
       >
-        <Text style={styles.title}>{post.title}</Text>
-        <Text style={styles.body}>{post.content}</Text>
+        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+          {post.title}
+        </Text>
+        <Text style={styles.body} numberOfLines={2} ellipsizeMode="tail">
+          {post.content}
+        </Text>
+        <Text style={styles.comments}>
+          {post.commentsCount || 0} {(post.commentsCount || 0) === 1 ? 'comment' : 'comments'}
+        </Text>
       </Pressable>
     </Swipeable>
   );
@@ -128,6 +135,11 @@ const styles = StyleSheet.create({
   body: {
     fontSize: scale(14),
     color: '#333',
+  },
+  comments: {
+    fontSize: scale(12),
+    color: '#666',
+    marginTop: scale(4),
   },
   actionsContainer: {
     flexDirection: 'row',

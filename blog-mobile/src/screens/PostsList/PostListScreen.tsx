@@ -20,11 +20,12 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { getPosts } from '../../api/posts';
 import { AddPostModal } from './components/AddPostModal';
 import { createPost, updatePost } from '../../api/posts';
+import { getCommentsCount } from '../../api/comments';
 import { PostForm } from '../../schemas/post.schema';
 import { PlusIcon, SearchIcon } from '../../assets/icons';
 
 export const PostListScreen = () => {
-  const { posts, setPosts } = usePostStore();
+  const { posts, setPosts, updateCommentsCount } = usePostStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,8 +48,23 @@ export const PostListScreen = () => {
   useEffect(() => {
     setLoading(true);
     getPosts()
-      .then(data => {
+      .then(async data => {
         setPosts(data);
+
+        // Load comments count for each post
+        const postsWithCommentsCount = await Promise.all(
+          data.map(async (post: Post) => {
+            try {
+              const commentsCount = await getCommentsCount(post.id);
+              return { ...post, commentsCount };
+            } catch (error) {
+              console.error(`Error loading comments count for post ${post.id}:`, error);
+              return { ...post, commentsCount: 0 };
+            }
+          }),
+        );
+
+        setPosts(postsWithCommentsCount);
         setLoading(false);
       })
       .catch(error => {
@@ -92,7 +108,12 @@ export const PostListScreen = () => {
         setEditingPost(null);
       } else {
         const newPost = await createPost(data);
-        setPosts([newPost, ...posts]);
+        // Гарантируем, что новый пост имеет поле comments
+        const postWithComments = {
+          ...newPost,
+          comments: newPost.comments || [],
+        };
+        setPosts([postWithComments, ...posts]);
         setModalVisible(false);
       }
     } catch (error) {
@@ -103,7 +124,7 @@ export const PostListScreen = () => {
     }
   };
   return (
-    <ScreenWrapper header="Posts" scrollEnable={false}>
+    <ScreenWrapper withoutHeader scrollEnable={false}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
           {error && (
