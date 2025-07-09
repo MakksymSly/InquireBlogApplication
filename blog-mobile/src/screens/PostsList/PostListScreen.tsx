@@ -51,7 +51,6 @@ export const PostListScreen = () => {
       .then(async data => {
         setPosts(data);
 
-        // Load comments count for each post
         const postsWithCommentsCount = await Promise.all(
           data.map(async (post: Post) => {
             try {
@@ -101,14 +100,20 @@ export const PostListScreen = () => {
         await updatePost(editingPost.id, data);
         setPosts(
           posts.map(p =>
-            p.id === editingPost.id ? { ...p, title: data.title, content: data.content } : p,
+            p.id === editingPost.id
+              ? {
+                  ...p,
+                  title: data.title,
+                  content: data.content,
+                  imageUrls: data.imageUrls,
+                }
+              : p,
           ),
         );
         setModalVisible(false);
         setEditingPost(null);
       } else {
         const newPost = await createPost(data);
-        // Гарантируем, что новый пост имеет поле comments
         const postWithComments = {
           ...newPost,
           comments: newPost.comments || [],

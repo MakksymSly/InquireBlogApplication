@@ -19,6 +19,9 @@ export class Post {
   @Column('text')
   content: string;
 
+  @Column('simple-array', { nullable: true })
+  imageUrls: string[];
+
   @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
   comments: Comment[];
 

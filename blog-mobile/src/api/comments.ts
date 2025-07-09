@@ -19,7 +19,6 @@ export const getCommentsCount = async (postId: number): Promise<number> => {
 };
 
 export const createComment = async (data: CreateCommentForm): Promise<Comment> => {
-  // Validate input data
   const validatedData = createCommentSchema.parse(data);
 
   const response = await api.post('/comments', validatedData);

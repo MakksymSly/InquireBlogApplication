@@ -107,7 +107,6 @@ export const PostDetailsScreen = () => {
     <CommentItem comment={item} onDelete={handleDeleteComment} />
   );
 
-  // Show only first 4 comments
   const displayedComments = comments.slice(0, 4);
   const hasMoreComments = comments.length > 4;
 
