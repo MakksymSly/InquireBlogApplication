@@ -19,10 +19,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { getPosts } from '../../api/posts';
 import { AddPostModal } from './components/AddPostModal';
-import { createPost, updatePost } from '../../api/posts';
+import { createPost, updatePost, deletePost } from '../../api/posts';
 import { getCommentsCount } from '../../api/comments';
 import { PostForm } from '../../schemas/post.schema';
 import { PlusIcon, SearchIcon } from '../../assets/icons';
+import { useViewedPosts } from '../../hooks/useViewedPosts';
 
 export const PostListScreen = () => {
   const { posts, setPosts, updateCommentsCount } = usePostStore();
@@ -32,6 +33,7 @@ export const PostListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const { markPostAsViewed, isPostViewed, removePostFromViewed } = useViewedPosts();
   const filteredPosts = useMemo(() => {
     if (!searchQuery.trim()) {
       return posts;
@@ -74,18 +76,22 @@ export const PostListScreen = () => {
   }, []);
 
   const onPostPress = (item: Post) => {
+    markPostAsViewed(item.id);
     navigation.navigate('PostDetails', { postId: item.id });
   };
-  const onPostDelete = (id: number) => {
+  const onPostDelete = async (id: number) => {
     try {
+      await deletePost(id);
+
       setPosts(posts.filter(post => post.id !== id));
+      removePostFromViewed(id);
+
       if (editingPost && editingPost.id === id) {
         setModalVisible(false);
         setEditingPost(null);
       }
     } catch (error) {
       console.error('Error deleting post:', error);
-
       setModalVisible(false);
       setEditingPost(null);
     }
@@ -177,6 +183,7 @@ export const PostListScreen = () => {
                     onDelete={onPostDelete}
                     onEdit={onPostEdit}
                     hideActions={modalVisible}
+                    isViewed={isPostViewed(item.id)}
                   />
                 )}
                 refreshing={loading}

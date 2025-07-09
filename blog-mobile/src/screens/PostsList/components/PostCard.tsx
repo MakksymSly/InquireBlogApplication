@@ -12,7 +12,7 @@ import {
 import { scale } from '../../../utils/scale';
 import { Post } from '../../../types/Post';
 import { Swipeable } from 'react-native-gesture-handler';
-import { UserIcon, DeleteIcon, EditIcon } from '../../../assets/icons';
+import { UserIcon, DeleteIcon, EditIcon, ViewIcon } from '../../../assets/icons';
 
 interface Props {
   onPress: () => void;
@@ -20,6 +20,7 @@ interface Props {
   onDelete: (id: number) => void;
   onEdit: (post: Post) => void;
   hideActions?: boolean;
+  isViewed?: boolean;
 }
 
 const formatDate = (date: Date | string | undefined): string => {
@@ -45,7 +46,7 @@ const formatDate = (date: Date | string | undefined): string => {
 };
 
 export const PostCard: React.FC<Props> = props => {
-  const { onPress, post, onDelete, onEdit, hideActions = false } = props;
+  const { onPress, post, onDelete, onEdit, hideActions = false, isViewed = false } = props;
 
   const [rightOpen, setRightOpen] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
@@ -123,6 +124,11 @@ export const PostCard: React.FC<Props> = props => {
               <Text style={styles.authorName}>Anonymous User</Text>
               <Text style={styles.postDate}>{formatDate(post.createdAt)}</Text>
             </View>
+            {isViewed && (
+              <View style={styles.viewedIconContainer}>
+                <ViewIcon size={scale(20)} />
+              </View>
+            )}
           </View>
         </View>
 
@@ -149,9 +155,15 @@ export const PostCard: React.FC<Props> = props => {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.comments}>
-            {post.commentsCount || 0} {(post.commentsCount || 0) === 1 ? 'comment' : 'comments'}
-          </Text>
+          <View style={styles.footerStats}>
+            <Text style={styles.comments}>
+              {post.commentsCount || 0} {(post.commentsCount || 0) === 1 ? 'comment' : 'comments'}
+            </Text>
+            <Text style={styles.attachments}>
+              {post.imageUrls?.length || 0}{' '}
+              {(post.imageUrls?.length || 0) === 1 ? 'attachment' : 'attachments'}
+            </Text>
+          </View>
         </View>
       </Pressable>
     </Swipeable>
@@ -196,6 +208,11 @@ const styles = StyleSheet.create({
   userDetails: {
     flex: 1,
   },
+  viewedIconContainer: {
+    marginLeft: scale(8),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   authorName: {
     fontSize: scale(14),
     fontWeight: '600',
@@ -239,7 +256,17 @@ const styles = StyleSheet.create({
     borderTopColor: '#f0f0f0',
     paddingTop: scale(12),
   },
+  footerStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   comments: {
+    fontSize: scale(12),
+    color: '#888',
+    fontWeight: '500',
+  },
+  attachments: {
     fontSize: scale(12),
     color: '#888',
     fontWeight: '500',
