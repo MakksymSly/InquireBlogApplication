@@ -1,4 +1,5 @@
 # InquireBlogApplication
+![ezgif-10a03bef3b7a0a](https://github.com/user-attachments/assets/be2c70e5-47f2-4220-91e2-c6cc6e28cc6b)
 
 A full-stack blog application with React Native mobile app and NestJS backend, featuring dark/light theme support, real-time search, image uploads, and comprehensive filtering system.
 
