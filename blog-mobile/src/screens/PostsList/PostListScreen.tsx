@@ -8,6 +8,9 @@ import {
   TextInput,
   TouchableWithoutFeedback,
   Keyboard,
+  Modal,
+  Switch,
+  ScrollView,
 } from 'react-native';
 import { usePostStore } from '../../store/usePostStore';
 import { ScreenWrapper } from '../../components/ScreenWrapper/ScreenWrapper';
@@ -37,20 +40,56 @@ export const PostListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    withAttachments: false,
+    withoutAttachments: false,
+    withComments: false,
+    withoutComments: false,
+    viewed: false,
+    notViewed: false,
+  });
   const { markPostAsViewed, isPostViewed, removePostFromViewed } = useViewedPosts();
 
   const filteredPosts = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return posts;
+    let filtered = posts;
+
+    // Поиск по тексту
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        (post: Post) =>
+          post.title.toLowerCase().includes(query) ||
+          (post.content && post.content.toLowerCase().includes(query)),
+      );
     }
 
-    const query = searchQuery.toLowerCase().trim();
-    return posts.filter(
-      (post: Post) =>
-        post.title.toLowerCase().includes(query) ||
-        (post.content && post.content.toLowerCase().includes(query)),
-    );
-  }, [posts, searchQuery]);
+    // Фильтр по вложениям
+    if (activeFilters.withAttachments) {
+      filtered = filtered.filter((post: Post) => post.imageUrls && post.imageUrls.length > 0);
+    }
+    if (activeFilters.withoutAttachments) {
+      filtered = filtered.filter((post: Post) => !post.imageUrls || post.imageUrls.length === 0);
+    }
+
+    // Фильтр по комментариям
+    if (activeFilters.withComments) {
+      filtered = filtered.filter((post: Post) => post.commentsCount && post.commentsCount > 0);
+    }
+    if (activeFilters.withoutComments) {
+      filtered = filtered.filter((post: Post) => !post.commentsCount || post.commentsCount === 0);
+    }
+
+    // Фильтр по просмотренным
+    if (activeFilters.viewed) {
+      filtered = filtered.filter((post: Post) => isPostViewed(post.id));
+    }
+    if (activeFilters.notViewed) {
+      filtered = filtered.filter((post: Post) => !isPostViewed(post.id));
+    }
+
+    return filtered;
+  }, [posts, searchQuery, activeFilters, isPostViewed]);
 
   const loadPosts = async (isRefreshing = false) => {
     const setLoadingState = isRefreshing ? setRefreshing : setLoading;
@@ -187,7 +226,10 @@ export const PostListScreen = () => {
                   </View>
                 </View>
                 <View style={themedStyles.actionButtons}>
-                  <Pressable style={themedStyles.filterButton}>
+                  <Pressable
+                    style={themedStyles.filterButton}
+                    onPress={() => setFilterModalVisible(true)}
+                  >
                     <FilterIcon size={scale(20)} color={colors.primary} />
                   </Pressable>
                   <Pressable onPress={() => setModalVisible(true)} style={themedStyles.plusButton}>
@@ -225,6 +267,166 @@ export const PostListScreen = () => {
             editingPost={editingPost}
             key={`modal-${modalVisible}-${editingPost?.id || 'new'}`}
           />
+
+          {/* Filter Modal */}
+          <Modal
+            visible={filterModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setFilterModalVisible(false)}
+          >
+            <TouchableWithoutFeedback onPress={() => setFilterModalVisible(false)}>
+              <View style={themedStyles.filterModalOverlay}>
+                <TouchableWithoutFeedback onPress={() => {}}>
+                  <View style={themedStyles.filterModalContent}>
+                    <Text style={themedStyles.filterModalTitle}>Filter Posts</Text>
+
+                    <ScrollView style={themedStyles.filterOptions}>
+                      <View style={themedStyles.filterSection}>
+                        <Text style={themedStyles.filterSectionTitle}>Attachments</Text>
+                        <View style={themedStyles.filterOption}>
+                          <Text style={themedStyles.filterOptionText}>With attachments</Text>
+                          <Switch
+                            value={activeFilters.withAttachments}
+                            onValueChange={value =>
+                              setActiveFilters(prev => ({
+                                ...prev,
+                                withAttachments: value,
+                                withoutAttachments: value ? false : prev.withoutAttachments,
+                              }))
+                            }
+                            trackColor={{ false: colors.border, true: colors.primary }}
+                            thumbColor={
+                              activeFilters.withAttachments ? colors.accent : colors.textSecondary
+                            }
+                          />
+                        </View>
+                        <View style={themedStyles.filterOption}>
+                          <Text style={themedStyles.filterOptionText}>Without attachments</Text>
+                          <Switch
+                            value={activeFilters.withoutAttachments}
+                            onValueChange={value =>
+                              setActiveFilters(prev => ({
+                                ...prev,
+                                withoutAttachments: value,
+                                withAttachments: value ? false : prev.withAttachments,
+                              }))
+                            }
+                            trackColor={{ false: colors.border, true: colors.primary }}
+                            thumbColor={
+                              activeFilters.withoutAttachments
+                                ? colors.accent
+                                : colors.textSecondary
+                            }
+                          />
+                        </View>
+                      </View>
+
+                      <View style={themedStyles.filterSection}>
+                        <Text style={themedStyles.filterSectionTitle}>Comments</Text>
+                        <View style={themedStyles.filterOption}>
+                          <Text style={themedStyles.filterOptionText}>With comments</Text>
+                          <Switch
+                            value={activeFilters.withComments}
+                            onValueChange={value =>
+                              setActiveFilters(prev => ({
+                                ...prev,
+                                withComments: value,
+                                withoutComments: value ? false : prev.withoutComments,
+                              }))
+                            }
+                            trackColor={{ false: colors.border, true: colors.primary }}
+                            thumbColor={
+                              activeFilters.withComments ? colors.accent : colors.textSecondary
+                            }
+                          />
+                        </View>
+                        <View style={themedStyles.filterOption}>
+                          <Text style={themedStyles.filterOptionText}>Without comments</Text>
+                          <Switch
+                            value={activeFilters.withoutComments}
+                            onValueChange={value =>
+                              setActiveFilters(prev => ({
+                                ...prev,
+                                withoutComments: value,
+                                withComments: value ? false : prev.withComments,
+                              }))
+                            }
+                            trackColor={{ false: colors.border, true: colors.primary }}
+                            thumbColor={
+                              activeFilters.withoutComments ? colors.accent : colors.textSecondary
+                            }
+                          />
+                        </View>
+                      </View>
+
+                      <View style={themedStyles.filterSection}>
+                        <Text style={themedStyles.filterSectionTitle}>Viewed Status</Text>
+                        <View style={themedStyles.filterOption}>
+                          <Text style={themedStyles.filterOptionText}>Viewed posts</Text>
+                          <Switch
+                            value={activeFilters.viewed}
+                            onValueChange={value =>
+                              setActiveFilters(prev => ({
+                                ...prev,
+                                viewed: value,
+                                notViewed: value ? false : prev.notViewed,
+                              }))
+                            }
+                            trackColor={{ false: colors.border, true: colors.primary }}
+                            thumbColor={activeFilters.viewed ? colors.accent : colors.textSecondary}
+                          />
+                        </View>
+                        <View style={themedStyles.filterOption}>
+                          <Text style={themedStyles.filterOptionText}>Not viewed posts</Text>
+                          <Switch
+                            value={activeFilters.notViewed}
+                            onValueChange={value =>
+                              setActiveFilters(prev => ({
+                                ...prev,
+                                notViewed: value,
+                                viewed: value ? false : prev.viewed,
+                              }))
+                            }
+                            trackColor={{ false: colors.border, true: colors.primary }}
+                            thumbColor={
+                              activeFilters.notViewed ? colors.accent : colors.textSecondary
+                            }
+                          />
+                        </View>
+                      </View>
+                    </ScrollView>
+
+                    <View style={themedStyles.filterModalButtons}>
+                      <Pressable
+                        style={themedStyles.filterButtonSecondary}
+                        onPress={() =>
+                          setActiveFilters({
+                            withAttachments: false,
+                            withoutAttachments: false,
+                            withComments: false,
+                            withoutComments: false,
+                            viewed: false,
+                            notViewed: false,
+                          })
+                        }
+                      >
+                        <Text style={themedStyles.filterButtonText}>Clear All</Text>
+                      </Pressable>
+                      <Pressable
+                        style={themedStyles.filterButtonPrimary}
+                        onPress={() => setFilterModalVisible(false)}
+                      >
+                        <Text style={[themedStyles.filterButtonText, { color: colors.buttonText }]}>
+                          Apply
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
         </View>
       </TouchableWithoutFeedback>
     </ScreenWrapper>
@@ -312,6 +514,83 @@ const createThemedStyles = (colors: any) =>
       shadowRadius: 4,
       backgroundColor: colors.cardBackground,
       shadowColor: '#000',
+    },
+    filterModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    filterModalContent: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: scale(16),
+      padding: scale(20),
+      margin: scale(20),
+      width: '90%',
+      maxWidth: scale(400),
+      maxHeight: '80%',
+      shadowColor: colors.textPrimary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    filterModalTitle: {
+      fontSize: scale(18),
+      fontWeight: '600',
+      color: colors.textPrimary,
+      marginBottom: scale(16),
+      textAlign: 'center',
+    },
+    filterOptions: {
+      maxHeight: scale(300),
+    },
+    filterSection: {
+      marginBottom: scale(20),
+    },
+    filterSectionTitle: {
+      fontSize: scale(16),
+      fontWeight: '600',
+      color: colors.textPrimary,
+      marginBottom: scale(12),
+    },
+    filterOption: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: scale(8),
+    },
+    filterOptionText: {
+      fontSize: scale(14),
+      color: colors.textSecondary,
+      flex: 1,
+    },
+    filterModalButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: scale(20),
+      gap: scale(12),
+    },
+    filterButtonSecondary: {
+      flex: 1,
+      padding: scale(12),
+      borderRadius: scale(8),
+      backgroundColor: colors.lightBackground,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    filterButtonPrimary: {
+      flex: 1,
+      padding: scale(12),
+      borderRadius: scale(8),
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+    },
+    filterButtonText: {
+      fontSize: scale(14),
+      fontWeight: '600',
+      color: colors.primary,
     },
   });
 
