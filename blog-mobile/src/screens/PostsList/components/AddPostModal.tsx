@@ -27,6 +27,7 @@ import { Post } from '../../../types/Post';
 import { ImageModalPreview } from './ImageModalPreview';
 import { AttachmentIcon } from '../../../assets/icons';
 import { uploadImage } from '../../../api/posts';
+import { useThemeStore } from '../../../store/useThemeStore';
 
 interface Props {
   visible: boolean;
@@ -37,6 +38,8 @@ interface Props {
 
 export const AddPostModal = (props: Props) => {
   const { visible, onClose, onSubmit, editingPost } = props;
+  const { colors } = useThemeStore();
+  const themedStyles = createThemedStyles(colors);
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(300);
   const isVisible = useSharedValue(false);
@@ -212,39 +215,39 @@ export const AddPostModal = (props: Props) => {
   return (
     <Modal visible={visible} transparent animationType="none">
       <TouchableOpacity
-        style={[styles.container, containerAnimatedStyle]}
+        style={[themedStyles.container, containerAnimatedStyle]}
         activeOpacity={1}
         onPress={handleClose}
       >
         <TouchableOpacity
-          style={[styles.modalContent, modalAnimatedStyle]}
+          style={[themedStyles.modalContent, modalAnimatedStyle]}
           activeOpacity={1}
           onPress={() => {}}
         >
-          <Text style={styles.label}>Title</Text>
+          <Text style={themedStyles.label}>Title</Text>
           <TextInput
-            style={styles.input}
+            style={themedStyles.input}
             value={titleValue}
             onChangeText={text => setValue('title', text)}
             placeholder="Post title"
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.textSecondary}
             editable={!loading}
           />
-          {errors.title && <Text style={styles.error}>{errors.title.message}</Text>}
+          {errors.title && <Text style={themedStyles.error}>{errors.title.message}</Text>}
 
-          <Text style={styles.label}>Content</Text>
+          <Text style={themedStyles.label}>Content</Text>
           <TextInput
-            style={[styles.input, { height: scale(100) }]}
+            style={[themedStyles.input, { height: scale(100) }]}
             value={contentValue}
             onChangeText={text => setValue('content', text)}
             placeholder="Post content"
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.textSecondary}
             multiline
             editable={!loading}
           />
-          {errors.content && <Text style={styles.error}>{errors.content.message}</Text>}
+          {errors.content && <Text style={themedStyles.error}>{errors.content.message}</Text>}
 
-          <Text style={styles.label}>Attachments</Text>
+          <Text style={themedStyles.label}>Attachments</Text>
           <View style={styles.imagesContainer}>
             {selectedImages.length > 0 ? (
               <ScrollView
@@ -262,29 +265,29 @@ export const AddPostModal = (props: Props) => {
                 ))}
               </ScrollView>
             ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No attachments</Text>
+              <View style={themedStyles.emptyContainer}>
+                <Text style={themedStyles.emptyText}>No attachments</Text>
               </View>
             )}
           </View>
-          <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+          <TouchableOpacity style={themedStyles.addImageButton} onPress={pickImage}>
             <AttachmentIcon size={scale(24)} />
-            <Text style={styles.addImageText}>Add Image</Text>
+            <Text style={themedStyles.addImageText}>Add Image</Text>
           </TouchableOpacity>
 
           {loading && (
             <View style={{ alignItems: 'center', marginVertical: 10 }}>
-              <ActivityIndicator size="small" color="#007AFF" />
+              <ActivityIndicator size="small" color={colors.primary} />
             </View>
           )}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={styles.button}
+              style={themedStyles.button}
               onPress={handleSubmit(handleSubmitForm)}
               disabled={loading}
             >
-              <Text style={styles.buttonText}>
+              <Text style={themedStyles.buttonText}>
                 {loading
                   ? editingPost
                     ? 'Updating...'
@@ -295,11 +298,11 @@ export const AddPostModal = (props: Props) => {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+              style={[themedStyles.button, themedStyles.cancelButton]}
               onPress={handleClose}
               disabled={loading}
             >
-              <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancel</Text>
+              <Text style={[themedStyles.buttonText, themedStyles.cancelButtonText]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -308,49 +311,102 @@ export const AddPostModal = (props: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: scale(12),
-    padding: scale(20),
-    margin: scale(20),
-    width: '90%',
-    maxWidth: scale(400),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createThemedStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: scale(8),
-    padding: scale(12),
-    marginBottom: scale(10),
-    backgroundColor: 'white',
-    fontSize: scale(16),
-    color: '#333',
-  },
-  label: {
-    marginBottom: scale(5),
-    fontWeight: '600',
-    color: '#333',
-  },
-  error: {
-    color: 'red',
-    marginBottom: scale(10),
-    fontSize: scale(12),
-  },
+    modalContent: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: scale(12),
+      padding: scale(20),
+      margin: scale(20),
+      width: '90%',
+      maxWidth: scale(400),
+      shadowColor: colors.textPrimary,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: scale(8),
+      padding: scale(12),
+      marginBottom: scale(10),
+      backgroundColor: colors.background,
+      fontSize: scale(16),
+      color: colors.textPrimary,
+    },
+    label: {
+      marginBottom: scale(5),
+      fontWeight: '600',
+      color: colors.textPrimary,
+    },
+    error: {
+      color: colors.error,
+      marginBottom: scale(10),
+      fontSize: scale(12),
+    },
+    emptyContainer: {
+      height: scale(120),
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      borderRadius: scale(8),
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderStyle: 'dashed',
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: scale(14),
+      fontWeight: '500',
+    },
+    addImageButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: scale(12),
+      paddingHorizontal: scale(20),
+      borderRadius: scale(8),
+      alignItems: 'center',
+      marginTop: scale(10),
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+    addImageText: {
+      color: colors.buttonText,
+      fontSize: scale(16),
+      fontWeight: '600',
+    },
+    button: {
+      flex: 1,
+      marginHorizontal: scale(5),
+      backgroundColor: colors.primary,
+      padding: scale(12),
+      borderRadius: scale(8),
+      alignItems: 'center',
+    },
+    buttonText: {
+      color: colors.buttonText,
+      fontWeight: '600',
+      fontSize: scale(16),
+    },
+    cancelButton: {
+      backgroundColor: colors.lightBackground,
+    },
+    cancelButtonText: {
+      color: colors.primary,
+    },
+  });
+
+const styles = StyleSheet.create({
   imagesContainer: {
     marginTop: scale(10),
     marginBottom: scale(10),
@@ -359,58 +415,9 @@ const styles = StyleSheet.create({
   imagesScrollContent: {
     paddingHorizontal: scale(5),
   },
-  emptyContainer: {
-    height: scale(120),
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: scale(8),
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    borderStyle: 'dashed',
-  },
-  emptyText: {
-    color: '#6c757d',
-    fontSize: scale(14),
-    fontWeight: '500',
-  },
-  addImageButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: scale(12),
-    paddingHorizontal: scale(20),
-    borderRadius: scale(8),
-    alignItems: 'center',
-    marginTop: scale(10),
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  addImageText: {
-    color: 'white',
-    fontSize: scale(16),
-    fontWeight: '600',
-  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: scale(15),
-  },
-  button: {
-    flex: 1,
-    marginHorizontal: scale(5),
-    backgroundColor: '#007AFF',
-    padding: scale(12),
-    borderRadius: scale(8),
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: scale(16),
-  },
-  cancelButton: {
-    backgroundColor: '#F2F2F7',
-  },
-  cancelButtonText: {
-    color: '#007AFF',
   },
 });

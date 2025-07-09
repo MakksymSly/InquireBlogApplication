@@ -22,11 +22,14 @@ import { AddPostModal } from './components/AddPostModal';
 import { createPost, updatePost, deletePost } from '../../api/posts';
 import { getCommentsCount } from '../../api/comments';
 import { PostForm } from '../../schemas/post.schema';
-import { PlusIcon, SearchIcon } from '../../assets/icons';
+import { FilterIcon, PlusIcon, SearchIcon } from '../../assets/icons';
 import { useViewedPosts } from '../../hooks/useViewedPosts';
+import { useThemeStore } from '../../store/useThemeStore';
 
 export const PostListScreen = () => {
   const { posts, setPosts, updateCommentsCount } = usePostStore();
+  const { colors } = useThemeStore();
+  const themedStyles = createThemedStyles(colors);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +38,7 @@ export const PostListScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const { markPostAsViewed, isPostViewed, removePostFromViewed } = useViewedPosts();
+
   const filteredPosts = useMemo(() => {
     if (!searchQuery.trim()) {
       return posts;
@@ -89,6 +93,7 @@ export const PostListScreen = () => {
     markPostAsViewed(item.id);
     navigation.navigate('PostDetails', { postId: item.id });
   };
+
   const onPostDelete = async (id: number) => {
     try {
       await deletePost(id);
@@ -106,10 +111,12 @@ export const PostListScreen = () => {
       setEditingPost(null);
     }
   };
+
   const onPostEdit = (post: Post) => {
     setEditingPost(post);
     setModalVisible(true);
   };
+
   const handleCreatePost = async (data: PostForm) => {
     try {
       if (editingPost) {
@@ -144,43 +151,49 @@ export const PostListScreen = () => {
       setEditingPost(null);
     }
   };
+
   return (
     <ScreenWrapper withoutHeader scrollEnable={false}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.container}>
+        <View style={themedStyles.container}>
           {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
+            <View style={themedStyles.errorContainer}>
+              <Text style={themedStyles.errorText}>{error}</Text>
             </View>
           )}
 
           {loading ? (
             <View style={styles.loadingContainer}>
-              <Text>Loading posts...</Text>
+              <Text style={themedStyles.loadingText}>Loading posts...</Text>
             </View>
           ) : (
             <>
-              <View style={styles.header}>
+              <View style={themedStyles.header}>
                 <View style={styles.searchContainer}>
-                  <View style={styles.searchInputContainer}>
+                  <View style={themedStyles.searchInputContainer}>
                     <SearchIcon />
                     <TextInput
-                      style={styles.searchInput}
+                      style={themedStyles.searchInput}
                       placeholder="Search posts..."
                       value={searchQuery}
                       onChangeText={setSearchQuery}
-                      placeholderTextColor="#999"
+                      placeholderTextColor={'#000'}
                     />
                     {searchQuery.length > 0 && (
                       <Pressable onPress={() => setSearchQuery('')} style={styles.clearButton}>
-                        <Text style={styles.clearButtonText}>✕</Text>
+                        <Text style={themedStyles.clearButtonText}>✕</Text>
                       </Pressable>
                     )}
                   </View>
                 </View>
-                <Pressable onPress={() => setModalVisible(true)} style={styles.plusButton}>
-                  <PlusIcon />
-                </Pressable>
+                <View style={themedStyles.actionButtons}>
+                  <Pressable style={themedStyles.filterButton}>
+                    <FilterIcon size={scale(20)} color={colors.primary} />
+                  </Pressable>
+                  <Pressable onPress={() => setModalVisible(true)} style={themedStyles.plusButton}>
+                    <PlusIcon size={scale(28)} color={colors.primary} />
+                  </Pressable>
+                </View>
               </View>
               <FlatList
                 showsVerticalScrollIndicator={false}
@@ -218,77 +231,102 @@ export const PostListScreen = () => {
   );
 };
 
+const createThemedStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    errorContainer: {
+      padding: scale(16),
+      margin: 16,
+      borderRadius: 8,
+      backgroundColor: colors.error + '20',
+    },
+    errorText: {
+      textAlign: 'center',
+      color: colors.error,
+    },
+    loadingText: {
+      color: colors.textPrimary,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      borderRadius: scale(16),
+      marginBottom: scale(12),
+      padding: scale(12),
+      backgroundColor: colors.cardBackground,
+    },
+    searchInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: scale(12),
+      paddingHorizontal: scale(12),
+      paddingVertical: scale(8),
+      borderWidth: 1,
+      backgroundColor: colors.lightBackground,
+      borderColor: colors.border,
+    },
+    searchInput: {
+      flex: 1,
+      height: scale(30),
+      marginLeft: scale(8),
+      fontSize: scale(16),
+      paddingVertical: scale(4),
+      color: '#000',
+    },
+    clearButtonText: {
+      fontSize: scale(14),
+      fontWeight: '600',
+      color: '#000',
+    },
+    actionButtons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scale(8),
+    },
+    filterButton: {
+      width: scale(40),
+      height: scale(40),
+      borderRadius: scale(20),
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 5,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      backgroundColor: colors.cardBackground,
+      shadowColor: '#000',
+    },
+    plusButton: {
+      width: scale(40),
+      height: scale(40),
+      borderRadius: scale(20),
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 5,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      backgroundColor: colors.cardBackground,
+      shadowColor: '#000',
+    },
+  });
+
 const styles = StyleSheet.create({
-  errorContainer: {
-    padding: scale(16),
-    backgroundColor: '#ffebee',
-    margin: 16,
-    borderRadius: 8,
-  },
-  errorText: {
-    color: '#c62828',
-    textAlign: 'center',
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopEndRadius: scale(16),
-    borderTopStartRadius: scale(16),
-    backgroundColor: '#fff',
-    padding: scale(12),
-  },
   searchContainer: {
     flex: 1,
     marginRight: scale(12),
   },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: scale(12),
-    paddingHorizontal: scale(12),
-    paddingVertical: scale(8),
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  searchInput: {
-    flex: 1,
-    height: scale(30),
-    marginLeft: scale(8),
-    fontSize: scale(16),
-    color: '#333',
-    paddingVertical: scale(4),
-  },
   clearButton: {
     padding: scale(4),
     marginLeft: scale(8),
-  },
-  clearButtonText: {
-    fontSize: scale(14),
-    color: '#999',
-    fontWeight: '600',
-  },
-  plusButton: {
-    bottom: scale(0),
-    width: scale(48),
-    height: scale(48),
-    borderRadius: scale(24),
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  container: {
-    flex: 1,
   },
 });

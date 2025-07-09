@@ -4,9 +4,10 @@ import { useRoute } from '@react-navigation/native';
 import { ScreenWrapper } from '../../components/ScreenWrapper/ScreenWrapper';
 import { usePostStore } from '../../store/usePostStore';
 import { useCommentStore } from '../../store/useCommentStore';
-import { CommentItem } from '../PostDetails/components/CommentItem';
+import { CommentItem } from './CommentItem';
 import { getComments, deleteComment } from '../../api/comments';
 import { scale } from '../../utils/scale';
+import { useThemeStore } from '../../store/useThemeStore';
 
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../../navigation/AppNavigator';
@@ -16,6 +17,8 @@ type CommentsListRouteProp = RouteProp<RootStackParamList, 'CommentsList'>;
 export const CommentsListScreen = () => {
   const route = useRoute<CommentsListRouteProp>();
   const { postId, postTitle } = route.params;
+  const { colors } = useThemeStore();
+  const themedStyles = createThemedStyles(colors);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -66,7 +69,7 @@ export const CommentsListScreen = () => {
   if (!post) {
     return (
       <ScreenWrapper header="Comments">
-        <Text style={styles.errorText}>Post not found</Text>
+        <Text style={themedStyles.errorText}>Post not found</Text>
       </ScreenWrapper>
     );
   }
@@ -77,11 +80,11 @@ export const CommentsListScreen = () => {
 
   return (
     <ScreenWrapper header={`Comments (${comments.length})`} withBackIcon>
-      <View style={styles.container}>
+      <View style={themedStyles.container}>
         {isLoading ? (
-          <Text style={styles.loadingText}>Loading comments...</Text>
+          <Text style={themedStyles.loadingText}>Loading comments...</Text>
         ) : comments.length === 0 ? (
-          <Text style={styles.emptyText}>No comments yet.</Text>
+          <Text style={themedStyles.emptyText}>No comments yet.</Text>
         ) : (
           <FlatList
             data={comments}
@@ -96,39 +99,44 @@ export const CommentsListScreen = () => {
   );
 };
 
+const createThemedStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    postTitle: {
+      fontSize: scale(18),
+      fontWeight: 'bold',
+      marginBottom: scale(20),
+      paddingHorizontal: scale(16),
+      paddingTop: scale(8),
+      lineHeight: scale(24),
+      color: colors.textPrimary,
+    },
+    loadingText: {
+      textAlign: 'center',
+      fontSize: scale(14),
+      padding: scale(20),
+      color: colors.textSecondary,
+    },
+    emptyText: {
+      textAlign: 'center',
+      fontSize: scale(14),
+      padding: scale(20),
+      fontStyle: 'italic',
+      color: colors.textSecondary,
+    },
+    errorText: {
+      fontSize: scale(16),
+      padding: scale(10),
+      color: colors.error,
+    },
+  });
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  postTitle: {
-    fontSize: scale(18),
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: scale(20),
-    paddingHorizontal: scale(16),
-    paddingTop: scale(8),
-    lineHeight: scale(24),
-  },
   commentsListContent: {
     paddingHorizontal: scale(16),
     paddingBottom: scale(20),
-  },
-  loadingText: {
-    textAlign: 'center',
-    fontSize: scale(14),
-    color: '#666',
-    padding: scale(20),
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: scale(14),
-    color: '#666',
-    padding: scale(20),
-    fontStyle: 'italic',
-  },
-  errorText: {
-    fontSize: scale(16),
-    color: 'red',
-    padding: scale(10),
   },
 });

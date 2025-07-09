@@ -8,19 +8,22 @@ import {
   ScrollView,
   Image,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { ScreenWrapper } from '../../components/ScreenWrapper/ScreenWrapper';
 import { usePostStore } from '../../store/usePostStore';
 import { useCommentStore } from '../../store/useCommentStore';
 import { Post } from '../../types/Post';
-import { CommentItem, AddCommentModal } from './components';
+import { CommentItem } from '../CommentsList/CommentItem';
+import { AddCommentModal } from './components';
 import { getComments, createComment, deleteComment } from '../../api/comments';
 import { scale } from '../../utils/scale';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { UserIcon, AttachmentIcon } from '../../assets/icons';
 import Carousel from 'react-native-reanimated-carousel';
+import { useThemeStore } from '../../store/useThemeStore';
 
 import type { RouteProp } from '@react-navigation/native';
 
@@ -31,6 +34,8 @@ export const PostDetailsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { postId } = route.params;
   const { width: screenWidth } = Dimensions.get('window');
+  const { colors } = useThemeStore();
+  const themedStyles = createThemedStyles(colors);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,7 +116,7 @@ export const PostDetailsScreen = () => {
   if (!post) {
     return (
       <ScreenWrapper header="Post Details">
-        <Text style={styles.errorText}>Post not found (ID: {postId})</Text>
+        <Text style={themedStyles.errorText}>Post not found (ID: {postId})</Text>
       </ScreenWrapper>
     );
   }
@@ -154,32 +159,32 @@ export const PostDetailsScreen = () => {
 
   return (
     <ScreenWrapper header="Post Details" scrollEnable={false} withBackIcon>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={themedStyles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.userInfo}>
-            <View style={styles.avatarContainer}>
-              <UserIcon size={scale(40)} color="#666" />
+            <View style={themedStyles.avatarContainer}>
+              <UserIcon size={scale(40)} color={colors.textPrimary} />
             </View>
             <View style={styles.userDetails}>
-              <Text style={styles.authorName}>Anonymous User</Text>
-              <Text style={styles.postDate}>{formatDate(post.createdAt)}</Text>
+              <Text style={themedStyles.authorName}>Anonymous User</Text>
+              <Text style={themedStyles.postDate}>{formatDate(post.createdAt)}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.postContent}>
-          <Text style={styles.title}>{post.title}</Text>
-          <Text style={styles.body}>{post.content}</Text>
+          <Text style={themedStyles.title}>{post.title}</Text>
+          <Text style={themedStyles.body}>{post.content}</Text>
         </View>
 
         <View style={styles.imagesSection}>
           {post.imageUrls && post.imageUrls.length > 0 ? (
             <>
-              <View style={styles.carouselContainer}>
+              <View style={themedStyles.carouselContainer}>
                 <Carousel
-                  loop
                   width={screenWidth - scale(32)}
                   height={scale(250)}
+                  loop
                   autoPlay={false}
                   data={post.imageUrls}
                   scrollAnimationDuration={1000}
@@ -193,7 +198,7 @@ export const PostDetailsScreen = () => {
 
                 {post.imageUrls.length > 1 && (
                   <View style={styles.counterContainer}>
-                    <Text style={styles.counterText}>
+                    <Text style={themedStyles.counterText}>
                       {currentImageIndex + 1}/{post.imageUrls.length}
                     </Text>
                   </View>
@@ -202,27 +207,32 @@ export const PostDetailsScreen = () => {
             </>
           ) : (
             <>
-              <View style={styles.emptyCarouselContainer}>
+              <View style={themedStyles.emptyCarouselContainer}>
                 <View style={styles.emptyCarouselContent}>
-                  <Text style={styles.emptyCarouselText}>No images attached to this post</Text>
+                  <Text style={themedStyles.emptyCarouselText}>
+                    No images attached to this post
+                  </Text>
                 </View>
               </View>
             </>
           )}
         </View>
 
-        <View style={styles.commentsSection}>
+        <View style={themedStyles.commentsSection}>
           <View style={styles.commentsHeader}>
-            <Text style={styles.commentsTitle}>Comments ({comments.length})</Text>
-            <TouchableOpacity style={styles.addButton} onPress={() => setIsModalVisible(true)}>
-              <Text style={styles.addButtonText}>Add Comment</Text>
+            <Text style={themedStyles.commentsTitle}>Comments ({comments.length})</Text>
+            <TouchableOpacity
+              style={themedStyles.addButton}
+              onPress={() => setIsModalVisible(true)}
+            >
+              <Text style={themedStyles.addButtonText}>Add Comment</Text>
             </TouchableOpacity>
           </View>
 
           {isLoading ? (
-            <Text style={styles.loadingText}>Loading comments...</Text>
+            <Text style={themedStyles.loadingText}>Loading comments...</Text>
           ) : comments.length === 0 ? (
-            <Text style={styles.emptyText}>No comments yet. Be the first to comment!</Text>
+            <Text style={themedStyles.emptyText}>No comments yet. Be the first to comment!</Text>
           ) : (
             <View style={styles.commentsContainer}>
               {displayedComments.map(comment => (
@@ -230,8 +240,13 @@ export const PostDetailsScreen = () => {
               ))}
 
               {hasMoreComments && (
-                <TouchableOpacity style={styles.showAllButton} onPress={handleShowAllComments}>
-                  <Text style={styles.showAllButtonText}>Show all {comments.length} comments</Text>
+                <TouchableOpacity
+                  style={themedStyles.showAllButton}
+                  onPress={handleShowAllComments}
+                >
+                  <Text style={themedStyles.showAllButtonText}>
+                    Show all {comments.length} comments
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -249,11 +264,151 @@ export const PostDetailsScreen = () => {
   );
 };
 
+const createThemedStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: scale(16),
+      backgroundColor: colors.background,
+    },
+    avatarContainer: {
+      width: scale(48),
+      height: scale(48),
+      borderRadius: scale(24),
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: scale(12),
+      borderWidth: 1,
+      backgroundColor: colors.lightBackground,
+      borderColor: colors.border,
+    },
+    authorName: {
+      fontSize: scale(16),
+      fontWeight: '600',
+      marginBottom: scale(4),
+      color: colors.textPrimary,
+    },
+    postDate: {
+      fontSize: scale(14),
+      color: colors.textSecondary,
+    },
+    title: {
+      fontSize: scale(24),
+      fontWeight: 'bold',
+      marginBottom: scale(12),
+      lineHeight: scale(32),
+      color: colors.textPrimary,
+    },
+    body: {
+      fontSize: scale(16),
+      lineHeight: scale(24),
+      marginBottom: scale(16),
+      color: colors.textSecondary,
+    },
+    carouselContainer: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: scale(16),
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: colors.textPrimary,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+      overflow: 'hidden',
+    },
+    emptyCarouselContainer: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: scale(16),
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: colors.textPrimary,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+      height: scale(250),
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyCarouselText: {
+      fontSize: scale(16),
+      textAlign: 'center',
+      fontStyle: 'italic',
+      color: colors.textSecondary,
+    },
+    counterText: {
+      fontSize: scale(14),
+      fontWeight: '600',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      color: '#fff',
+      paddingHorizontal: scale(12),
+      paddingVertical: scale(6),
+      borderRadius: scale(16),
+    },
+    commentsSection: {
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingTop: scale(20),
+    },
+    commentsTitle: {
+      fontSize: scale(18),
+      fontWeight: 'bold',
+      color: colors.textPrimary,
+    },
+    addButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: scale(16),
+      paddingVertical: scale(8),
+      borderRadius: scale(6),
+    },
+    addButtonText: {
+      color: colors.buttonText,
+      fontSize: scale(14),
+      fontWeight: '600',
+    },
+    loadingText: {
+      textAlign: 'center',
+      fontSize: scale(14),
+      padding: scale(20),
+      color: colors.textSecondary,
+    },
+    emptyText: {
+      textAlign: 'center',
+      fontSize: scale(14),
+      padding: scale(20),
+      fontStyle: 'italic',
+      color: colors.textSecondary,
+    },
+    errorText: {
+      fontSize: scale(16),
+      padding: scale(10),
+      color: colors.error,
+    },
+    showAllButton: {
+      backgroundColor: colors.lightBackground,
+      padding: scale(12),
+      borderRadius: scale(8),
+      alignItems: 'center',
+      marginTop: scale(12),
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginBottom: Platform.OS === 'android' ? scale(100) : 0,
+    },
+    showAllButtonText: {
+      color: colors.primary,
+      fontSize: scale(14),
+      fontWeight: '600',
+    },
+  });
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: scale(16),
-  },
   header: {
     marginBottom: scale(20),
   },
@@ -261,46 +416,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  avatarContainer: {
-    width: scale(48),
-    height: scale(48),
-    borderRadius: scale(24),
-    backgroundColor: '#f8f9fa',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: scale(12),
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
   userDetails: {
     flex: 1,
   },
-  authorName: {
-    fontSize: scale(16),
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: scale(4),
-  },
-  postDate: {
-    fontSize: scale(14),
-    color: '#888',
-  },
   postContent: {
     marginBottom: scale(24),
-  },
-
-  title: {
-    fontSize: scale(24),
-    fontWeight: 'bold',
-    marginBottom: scale(12),
-    color: '#1a1a1a',
-    lineHeight: scale(32),
-  },
-  body: {
-    fontSize: scale(16),
-    lineHeight: scale(24),
-    color: '#555',
-    marginBottom: scale(16),
   },
   imagesSection: {
     marginBottom: scale(24),
@@ -313,23 +433,7 @@ const styles = StyleSheet.create({
   imagesTitle: {
     fontSize: scale(14),
     fontWeight: '600',
-    color: '#666',
     marginLeft: scale(8),
-  },
-  carouselContainer: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: scale(16),
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: 'hidden',
   },
   carouselItem: {
     flex: 1,
@@ -341,51 +445,14 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  emptyCarouselContainer: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: scale(16),
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    height: scale(250),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   emptyCarouselContent: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  emptyCarouselText: {
-    fontSize: scale(16),
-    color: '#666',
-    textAlign: 'center',
-    fontStyle: 'italic',
   },
   counterContainer: {
     alignItems: 'center',
     marginTop: scale(20),
     marginBottom: scale(12),
-  },
-  counterText: {
-    fontSize: scale(14),
-    fontWeight: '600',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    color: '#fff',
-    paddingHorizontal: scale(12),
-    paddingVertical: scale(6),
-    borderRadius: scale(16),
-  },
-  commentsSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingTop: scale(20),
   },
   commentsContainer: {
     marginTop: scale(12),
@@ -395,53 +462,5 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: scale(16),
-  },
-  commentsTitle: {
-    fontSize: scale(18),
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  addButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(8),
-    borderRadius: scale(6),
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: scale(14),
-    fontWeight: '600',
-  },
-  loadingText: {
-    textAlign: 'center',
-    fontSize: scale(14),
-    color: '#666',
-    padding: scale(20),
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: scale(14),
-    color: '#666',
-    padding: scale(20),
-    fontStyle: 'italic',
-  },
-  errorText: {
-    fontSize: scale(16),
-    color: 'red',
-    padding: scale(10),
-  },
-  showAllButton: {
-    backgroundColor: '#f8f9fa',
-    padding: scale(12),
-    borderRadius: scale(8),
-    alignItems: 'center',
-    marginTop: scale(12),
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  showAllButtonText: {
-    color: '#007bff',
-    fontSize: scale(14),
-    fontWeight: '600',
   },
 });

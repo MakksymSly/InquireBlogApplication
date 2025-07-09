@@ -19,6 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scale } from '../../../utils/scale';
 import { createCommentSchema } from '../../../schemas/comment.schema';
+import { useThemeStore } from '../../../store/useThemeStore';
 
 interface AddCommentModalProps {
   visible: boolean;
@@ -36,6 +37,8 @@ export const AddCommentModal: React.FC<AddCommentModalProps> = ({
   const [author, setAuthor] = useState('');
   const [text, setText] = useState('');
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const { colors } = useThemeStore();
+  const themedStyles = createThemedStyles(colors);
 
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(300);
@@ -136,25 +139,25 @@ export const AddCommentModal: React.FC<AddCommentModalProps> = ({
   return (
     <Modal visible={visible} transparent animationType="none">
       <TouchableWithoutFeedback onPress={handleClose}>
-        <Animated.View style={[styles.container, containerAnimatedStyle]}>
+        <Animated.View style={[themedStyles.container, containerAnimatedStyle]}>
           <TouchableWithoutFeedback onPress={() => {}}>
-            <Animated.View style={[styles.modalContent, modalAnimatedStyle]}>
-              <Text style={styles.label}>Name</Text>
+            <Animated.View style={[themedStyles.modalContent, modalAnimatedStyle]}>
+              <Text style={themedStyles.label}>Name</Text>
               <TextInput
-                style={styles.input}
+                style={themedStyles.input}
                 placeholder="Your name"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textSecondary}
                 value={author}
                 onChangeText={setAuthor}
                 maxLength={50}
                 editable={!isLoading}
               />
 
-              <Text style={styles.label}>Comment</Text>
+              <Text style={themedStyles.label}>Comment</Text>
               <TextInput
-                style={[styles.input, { height: scale(100) }]}
+                style={[themedStyles.input, { height: scale(100) }]}
                 placeholder="Comment text..."
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textSecondary}
                 value={text}
                 onChangeText={setText}
                 multiline
@@ -166,20 +169,28 @@ export const AddCommentModal: React.FC<AddCommentModalProps> = ({
 
               {isLoading && (
                 <View style={{ alignItems: 'center', marginVertical: 10 }}>
-                  <ActivityIndicator size="small" color="#007AFF" />
+                  <ActivityIndicator size="small" color={colors.primary} />
                 </View>
               )}
 
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={isLoading}>
-                  <Text style={styles.buttonText}>{isLoading ? 'Adding...' : 'Add Comment'}</Text>
+              <View style={themedStyles.buttonContainer}>
+                <TouchableOpacity
+                  style={themedStyles.button}
+                  onPress={handleSubmit}
+                  disabled={isLoading}
+                >
+                  <Text style={themedStyles.buttonText}>
+                    {isLoading ? 'Adding...' : 'Add Comment'}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.button, styles.cancelButton]}
+                  style={[themedStyles.button, themedStyles.cancelButton]}
                   onPress={handleCloseAndReset}
                   disabled={isLoading}
                 >
-                  <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancel</Text>
+                  <Text style={[themedStyles.buttonText, themedStyles.cancelButtonText]}>
+                    Cancel
+                  </Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>
@@ -190,66 +201,67 @@ export const AddCommentModal: React.FC<AddCommentModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: scale(12),
-    padding: scale(20),
-    margin: scale(20),
-    width: '90%',
-    maxWidth: scale(400),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createThemedStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  label: {
-    marginBottom: scale(5),
-    fontWeight: '600',
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: scale(8),
-    padding: scale(12),
-    marginBottom: scale(10),
-    backgroundColor: 'white',
-    fontSize: scale(16),
-    color: '#333',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: scale(15),
-  },
-  button: {
-    flex: 1,
-    marginHorizontal: scale(5),
-    backgroundColor: '#007AFF',
-    padding: scale(12),
-    borderRadius: scale(8),
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: scale(16),
-  },
-  cancelButton: {
-    backgroundColor: '#F2F2F7',
-  },
-  cancelButtonText: {
-    color: '#007AFF',
-  },
-});
+    modalContent: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: scale(12),
+      padding: scale(20),
+      margin: scale(20),
+      width: '90%',
+      maxWidth: scale(400),
+      shadowColor: colors.textPrimary,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    label: {
+      marginBottom: scale(5),
+      fontWeight: '600',
+      color: colors.textPrimary,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: scale(8),
+      padding: scale(12),
+      marginBottom: scale(10),
+      backgroundColor: colors.background,
+      fontSize: scale(16),
+      color: colors.textPrimary,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: scale(15),
+    },
+    button: {
+      flex: 1,
+      marginHorizontal: scale(5),
+      backgroundColor: colors.primary,
+      padding: scale(12),
+      borderRadius: scale(8),
+      alignItems: 'center',
+    },
+    buttonText: {
+      color: colors.buttonText,
+      fontWeight: '600',
+      fontSize: scale(16),
+    },
+    cancelButton: {
+      backgroundColor: colors.lightBackground,
+    },
+    cancelButtonText: {
+      color: colors.primary,
+    },
+  });

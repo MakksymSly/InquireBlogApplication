@@ -9,3 +9,4 @@ export * from './EditIcon';
 export * from './ViewIcon';
 export * from './CloseIcon';
 export * from './AttachmentIcon';
+export * from './FilterIcon';

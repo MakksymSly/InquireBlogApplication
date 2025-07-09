@@ -13,6 +13,7 @@ import { scale } from '../../../utils/scale';
 import { Post } from '../../../types/Post';
 import { Swipeable } from 'react-native-gesture-handler';
 import { UserIcon, DeleteIcon, EditIcon, ViewIcon } from '../../../assets/icons';
+import { useThemeStore } from '../../../store/useThemeStore';
 
 interface Props {
   onPress: () => void;
@@ -47,6 +48,8 @@ const formatDate = (date: Date | string | undefined): string => {
 
 export const PostCard: React.FC<Props> = props => {
   const { onPress, post, onDelete, onEdit, hideActions = false, isViewed = false } = props;
+  const { colors } = useThemeStore();
+  const themedStyles = createThemedStyles(colors);
 
   const [rightOpen, setRightOpen] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
@@ -108,7 +111,7 @@ export const PostCard: React.FC<Props> = props => {
       <Pressable
         onPress={onPress}
         style={[
-          styles.postCard,
+          themedStyles.postCard,
           rightOpen && {
             borderTopRightRadius: 0,
             borderBottomRightRadius: 0,
@@ -117,12 +120,12 @@ export const PostCard: React.FC<Props> = props => {
       >
         <View style={styles.header}>
           <View style={styles.userInfo}>
-            <View style={styles.avatarContainer}>
-              <UserIcon size={scale(32)} color="#666" />
+            <View style={themedStyles.avatarContainer}>
+              <UserIcon size={scale(32)} color={colors.textPrimary} />
             </View>
             <View style={styles.userDetails}>
-              <Text style={styles.authorName}>Anonymous User</Text>
-              <Text style={styles.postDate}>{formatDate(post.createdAt)}</Text>
+              <Text style={themedStyles.authorName}>Anonymous User</Text>
+              <Text style={themedStyles.postDate}>{formatDate(post.createdAt)}</Text>
             </View>
             {isViewed && (
               <View style={styles.viewedIconContainer}>
@@ -133,10 +136,10 @@ export const PostCard: React.FC<Props> = props => {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={themedStyles.title} numberOfLines={1} ellipsizeMode="tail">
             {post.title}
           </Text>
-          <Text style={styles.body} numberOfLines={2} ellipsizeMode="tail">
+          <Text style={themedStyles.body} numberOfLines={2} ellipsizeMode="tail">
             {post.content}
           </Text>
           {post.imageUrls && post.imageUrls.length > 0 && (
@@ -154,12 +157,12 @@ export const PostCard: React.FC<Props> = props => {
           )}
         </View>
 
-        <View style={styles.footer}>
+        <View style={themedStyles.footer}>
           <View style={styles.footerStats}>
-            <Text style={styles.comments}>
+            <Text style={themedStyles.comments}>
               {post.commentsCount || 0} {(post.commentsCount || 0) === 1 ? 'comment' : 'comments'}
             </Text>
-            <Text style={styles.attachments}>
+            <Text style={themedStyles.attachments}>
               {post.imageUrls?.length || 0}{' '}
               {(post.imageUrls?.length || 0) === 1 ? 'attachment' : 'attachments'}
             </Text>
@@ -170,40 +173,81 @@ export const PostCard: React.FC<Props> = props => {
   );
 };
 
-const styles = StyleSheet.create({
-  postCard: {
-    marginBottom: scale(12),
-    padding: scale(16),
-    backgroundColor: '#ffffff',
-    borderRadius: scale(12),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createThemedStyles = (colors: any) =>
+  StyleSheet.create({
+    postCard: {
+      marginBottom: scale(12),
+      padding: scale(16),
+      borderRadius: scale(12),
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3.84,
+      elevation: 5,
+      borderWidth: 1,
+      backgroundColor: colors.cardBackground,
+      borderColor: colors.border,
+      shadowColor: colors.textPrimary,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
+    avatarContainer: {
+      width: scale(40),
+      height: scale(40),
+      borderRadius: scale(20),
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: scale(12),
+      borderWidth: 1,
+      backgroundColor: colors.lightBackground,
+      borderColor: colors.border,
+    },
+    authorName: {
+      fontSize: scale(14),
+      fontWeight: '600',
+      marginBottom: scale(2),
+      color: colors.textPrimary,
+    },
+    postDate: {
+      fontSize: scale(12),
+      color: colors.textSecondary,
+    },
+    title: {
+      fontSize: scale(18),
+      fontWeight: 'bold',
+      marginBottom: scale(8),
+      color: colors.textPrimary,
+    },
+    body: {
+      fontSize: scale(14),
+      lineHeight: scale(20),
+      marginBottom: scale(8),
+      color: colors.textSecondary,
+    },
+    footer: {
+      borderTopWidth: 1,
+      paddingTop: scale(12),
+      borderTopColor: colors.border,
+    },
+    comments: {
+      fontSize: scale(12),
+      fontWeight: '500',
+      color: colors.textSecondary,
+    },
+    attachments: {
+      fontSize: scale(12),
+      fontWeight: '500',
+      color: colors.textSecondary,
+    },
+  });
+
+const styles = StyleSheet.create({
   header: {
     marginBottom: scale(12),
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  avatarContainer: {
-    width: scale(40),
-    height: scale(40),
-    borderRadius: scale(20),
-    backgroundColor: '#f8f9fa',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: scale(12),
-    borderWidth: 1,
-    borderColor: '#e9ecef',
   },
   userDetails: {
     flex: 1,
@@ -213,30 +257,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  authorName: {
-    fontSize: scale(14),
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: scale(2),
-  },
-  postDate: {
-    fontSize: scale(12),
-    color: '#888',
-  },
   content: {
     marginBottom: scale(12),
-  },
-  title: {
-    fontSize: scale(18),
-    fontWeight: 'bold',
-    marginBottom: scale(8),
-    color: '#1a1a1a',
-  },
-  body: {
-    fontSize: scale(14),
-    color: '#666',
-    lineHeight: scale(20),
-    marginBottom: scale(8),
   },
   imagesContainer: {
     marginTop: scale(8),
@@ -251,25 +273,10 @@ const styles = StyleSheet.create({
     borderRadius: scale(8),
     marginHorizontal: scale(5),
   },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingTop: scale(12),
-  },
   footerStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  comments: {
-    fontSize: scale(12),
-    color: '#888',
-    fontWeight: '500',
-  },
-  attachments: {
-    fontSize: scale(12),
-    color: '#888',
-    fontWeight: '500',
   },
   actionsContainer: {
     flexDirection: 'row',
