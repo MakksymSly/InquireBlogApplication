@@ -7,7 +7,7 @@ A full-stack blog application with React Native mobile app and NestJS backend, f
 This is a test project demonstrating modern mobile app development with the following features:
 
 - **Mobile App**: React Native with Expo
-- **Backend**: NestJS with TypeORM and SQLite
+- **Backend**: NestJS with TypeORM and PostgreSQL
 - **State Management**: Zustand with persistence
 - **Navigation**: React Navigation
 - **Forms**: React Hook Form with Zod validation
