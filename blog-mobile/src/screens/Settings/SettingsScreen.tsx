@@ -34,7 +34,7 @@ export const SettingsScreen = () => {
         >
           <View style={styles.settingContent}>
             <Text style={themedStyles.settingTitle}>About</Text>
-            <Text style={themedStyles.settingDescription}>View app information and tech stack</Text>
+            <Text style={themedStyles.settingDescription}>View app information</Text>
           </View>
           <Text style={themedStyles.arrowText}>›</Text>
         </TouchableOpacity>
