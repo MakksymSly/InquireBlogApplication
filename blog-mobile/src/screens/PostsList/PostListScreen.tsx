@@ -28,6 +28,7 @@ import { useViewedPosts } from '../../hooks/useViewedPosts';
 export const PostListScreen = () => {
   const { posts, setPosts, updateCommentsCount } = usePostStore();
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -47,33 +48,42 @@ export const PostListScreen = () => {
     );
   }, [posts, searchQuery]);
 
+  const loadPosts = async (isRefreshing = false) => {
+    const setLoadingState = isRefreshing ? setRefreshing : setLoading;
+    setLoadingState(true);
+
+    try {
+      const data = await getPosts();
+
+      const postsWithCommentsCount = await Promise.all(
+        data.map(async (post: Post) => {
+          try {
+            const commentsCount = await getCommentsCount(post.id);
+            return { ...post, commentsCount };
+          } catch (error) {
+            console.error(`Error loading comments count for post ${post.id}:`, error);
+            return { ...post, commentsCount: 0 };
+          }
+        }),
+      );
+
+      setPosts(postsWithCommentsCount);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch posts');
+    } finally {
+      setLoadingState(false);
+    }
+  };
+
   useEffect(() => {
-    setLoading(true);
-    getPosts()
-      .then(async data => {
-        setPosts(data);
-
-        const postsWithCommentsCount = await Promise.all(
-          data.map(async (post: Post) => {
-            try {
-              const commentsCount = await getCommentsCount(post.id);
-              return { ...post, commentsCount };
-            } catch (error) {
-              console.error(`Error loading comments count for post ${post.id}:`, error);
-              return { ...post, commentsCount: 0 };
-            }
-          }),
-        );
-
-        setPosts(postsWithCommentsCount);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching posts:', error);
-        setError(error instanceof Error ? error.message : 'Failed to fetch posts');
-        setLoading(false);
-      });
+    loadPosts();
   }, []);
+
+  const onRefresh = () => {
+    loadPosts(true);
+  };
 
   const onPostPress = (item: Post) => {
     markPostAsViewed(item.id);
@@ -186,7 +196,8 @@ export const PostListScreen = () => {
                     isViewed={isPostViewed(item.id)}
                   />
                 )}
-                refreshing={loading}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
               />
             </>
           )}

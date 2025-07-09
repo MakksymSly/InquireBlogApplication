@@ -78,8 +78,6 @@ export const CommentsListScreen = () => {
   return (
     <ScreenWrapper header={`Comments (${comments.length})`} withBackIcon>
       <View style={styles.container}>
-        <Text style={styles.postTitle}>{postTitle}</Text>
-
         {isLoading ? (
           <Text style={styles.loadingText}>Loading comments...</Text>
         ) : comments.length === 0 ? (
@@ -103,11 +101,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   postTitle: {
-    fontSize: scale(16),
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: scale(16),
+    fontSize: scale(18),
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: scale(20),
     paddingHorizontal: scale(16),
+    paddingTop: scale(8),
+    lineHeight: scale(24),
   },
   commentsListContent: {
     paddingHorizontal: scale(16),
