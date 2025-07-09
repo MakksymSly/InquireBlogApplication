@@ -49,6 +49,7 @@ export const PostListScreen = () => {
     viewed: false,
     notViewed: false,
   });
+  const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
   const { markPostAsViewed, isPostViewed, removePostFromViewed } = useViewedPosts();
 
   const filteredPosts = useMemo(() => {
@@ -134,6 +135,7 @@ export const PostListScreen = () => {
   };
 
   const onPostDelete = async (id: number) => {
+    setDeletingPostId(id);
     try {
       await deletePost(id);
 
@@ -148,6 +150,8 @@ export const PostListScreen = () => {
       console.error('Error deleting post:', error);
       setModalVisible(false);
       setEditingPost(null);
+    } finally {
+      setDeletingPostId(null);
     }
   };
 
@@ -237,23 +241,36 @@ export const PostListScreen = () => {
                   </Pressable>
                 </View>
               </View>
-              <FlatList
-                showsVerticalScrollIndicator={false}
-                data={filteredPosts}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({ item }) => (
-                  <PostCard
-                    onPress={() => onPostPress(item)}
-                    post={item}
-                    onDelete={onPostDelete}
-                    onEdit={onPostEdit}
-                    hideActions={modalVisible}
-                    isViewed={isPostViewed(item.id)}
-                  />
-                )}
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-              />
+              {filteredPosts.length === 0 ? (
+                <View style={themedStyles.emptyContainer}>
+                  <Text style={themedStyles.emptyTitle}>No posts yet</Text>
+                  <Text style={themedStyles.emptySubtitle}>
+                    Create your first post by pressing + on top
+                  </Text>
+                  <Text style={themedStyles.emptyHint}>
+                    Tip: Swipe left on posts to edit or delete them
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  showsVerticalScrollIndicator={false}
+                  data={filteredPosts}
+                  keyExtractor={item => item.id.toString()}
+                  renderItem={({ item }) => (
+                    <PostCard
+                      onPress={() => onPostPress(item)}
+                      post={item}
+                      onDelete={onPostDelete}
+                      onEdit={onPostEdit}
+                      hideActions={modalVisible}
+                      isViewed={isPostViewed(item.id)}
+                      isDeleting={deletingPostId === item.id}
+                    />
+                  )}
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                />
+              )}
             </>
           )}
 
@@ -543,7 +560,7 @@ const createThemedStyles = (colors: any) =>
       textAlign: 'center',
     },
     filterOptions: {
-      maxHeight: scale(300),
+      maxHeight: scale(400),
     },
     filterSection: {
       marginBottom: scale(20),
@@ -591,6 +608,33 @@ const createThemedStyles = (colors: any) =>
       fontSize: scale(14),
       fontWeight: '600',
       color: colors.primary,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: scale(20),
+    },
+    emptyTitle: {
+      fontSize: scale(20),
+      fontWeight: '600',
+      color: colors.textPrimary,
+      marginBottom: scale(8),
+      textAlign: 'center',
+    },
+    emptySubtitle: {
+      fontSize: scale(16),
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: scale(24),
+      marginBottom: scale(16),
+    },
+    emptyHint: {
+      fontSize: scale(14),
+      color: colors.primary,
+      textAlign: 'center',
+      lineHeight: scale(20),
+      fontStyle: 'italic',
     },
   });
 

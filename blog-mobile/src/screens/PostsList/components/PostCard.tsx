@@ -8,6 +8,7 @@ import {
   Animated,
   Image,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { scale } from '../../../utils/scale';
 import { Post } from '../../../types/Post';
@@ -22,6 +23,7 @@ interface Props {
   onEdit: (post: Post) => void;
   hideActions?: boolean;
   isViewed?: boolean;
+  isDeleting?: boolean;
 }
 
 const formatDate = (date: Date | string | undefined): string => {
@@ -47,7 +49,15 @@ const formatDate = (date: Date | string | undefined): string => {
 };
 
 export const PostCard: React.FC<Props> = props => {
-  const { onPress, post, onDelete, onEdit, hideActions = false, isViewed = false } = props;
+  const {
+    onPress,
+    post,
+    onDelete,
+    onEdit,
+    hideActions = false,
+    isViewed = false,
+    isDeleting = false,
+  } = props;
   const { colors } = useThemeStore();
   const themedStyles = createThemedStyles(colors);
 
@@ -116,7 +126,9 @@ export const PostCard: React.FC<Props> = props => {
             borderTopRightRadius: 0,
             borderBottomRightRadius: 0,
           },
+          isDeleting && themedStyles.deletingCard,
         ]}
+        disabled={isDeleting}
       >
         <View style={styles.header}>
           <View style={styles.userInfo}>
@@ -168,6 +180,13 @@ export const PostCard: React.FC<Props> = props => {
             </Text>
           </View>
         </View>
+
+        {isDeleting && (
+          <View style={themedStyles.loadingOverlay}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={themedStyles.loadingText}>Deleting...</Text>
+          </View>
+        )}
       </Pressable>
     </Swipeable>
   );
@@ -238,6 +257,26 @@ const createThemedStyles = (colors: any) =>
       fontSize: scale(12),
       fontWeight: '500',
       color: colors.textSecondary,
+    },
+    deletingCard: {
+      opacity: 0.6,
+    },
+    loadingOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: scale(12),
+    },
+    loadingText: {
+      color: colors.textPrimary,
+      fontSize: scale(14),
+      fontWeight: '600',
+      marginTop: scale(8),
     },
   });
 
