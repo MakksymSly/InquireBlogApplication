@@ -28,7 +28,7 @@ This is a test project demonstrating modern mobile app development with the foll
 
 ### Backend Features
 - RESTful API with NestJS
-- TypeORM with SQLite database
+- TypeORM with PostgreSQL database
 - File upload handling
 - Comments management
 - Posts CRUD operations
@@ -48,7 +48,7 @@ This is a test project demonstrating modern mobile app development with the foll
 ### Backend
 - NestJS
 - TypeORM
-- SQLite
+- PostgreSQL
 - Multer (File uploads)
 - Class-validator
 
@@ -60,6 +60,7 @@ Before running this project, make sure you have the following installed:
 - **npm** or **yarn**
 - **Expo CLI**: `npm install -g @expo/cli`
 - **Git**
+- **PostgreSQL** (see installation instructions below)
 
 ### Finding Your IPv4 Address
 
@@ -79,6 +80,39 @@ ip addr show
 ```
 Look for "inet" followed by your local IP address (usually starts with 192.168.x.x or 10.0.x.x).
 
+### PostgreSQL Installation
+
+#### Windows
+1. Download PostgreSQL from [postgresql.org](https://www.postgresql.org/download/windows/)
+2. Run the installer and follow the setup wizard
+3. Remember the password you set for the `postgres` user
+4. PostgreSQL will be available on port 5432
+
+#### macOS
+```bash
+# Using Homebrew
+brew install postgresql
+brew services start postgresql
+
+# Or download from postgresql.org
+```
+
+#### Linux (Ubuntu/Debian)
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
+#### Linux (CentOS/RHEL/Fedora)
+```bash
+sudo dnf install postgresql postgresql-server
+sudo postgresql-setup --initdb
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
 ## Installation & Setup
 
 ### 1. Clone the Repository
@@ -95,7 +129,69 @@ cd blog-backend
 npm install
 ```
 
-### 3. Environment Configuration
+### 3. Database Setup
+
+#### Create PostgreSQL Database
+
+1. Connect to PostgreSQL as the postgres user:
+
+**Windows:**
+```bash
+# If you added PostgreSQL to PATH during installation
+psql -U postgres
+
+# Or navigate to PostgreSQL bin directory
+cd "C:\Program Files\PostgreSQL\[version]\bin"
+psql -U postgres
+```
+
+**macOS/Linux:**
+```bash
+sudo -u postgres psql
+```
+
+2. Create the database and user:
+```sql
+CREATE DATABASE blog_db;
+CREATE USER blog_user WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE blog_db TO blog_user;
+\q
+```
+
+**Note:** Replace `your_password` with a secure password of your choice.
+
+### 4. Environment Configuration
+
+#### Backend Environment Setup
+
+1. Navigate to the backend directory:
+```bash
+cd blog-backend
+```
+
+2. Copy the environment example file:
+```bash
+cp env.example .env
+```
+
+3. Edit the `.env` file and update the following variables:
+```env
+# Replace with your local IPv4 address
+CORS_ORIGIN=http://YOUR_IPV4_ADDRESS:3000
+
+# PostgreSQL Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=blog_user
+DB_PASSWORD=your_password
+DB_NAME=blog_db
+
+# Server port
+PORT=3000
+NODE_ENV=development
+```
+
+**Important:** Replace `your_password` with the password you set when creating the database user.
 
 #### Backend Environment Setup
 
@@ -126,7 +222,7 @@ cp env.example .env
 API_BASE_URL=http://YOUR_IPV4_ADDRESS:3000
 ```
 
-### 4. Mobile App Setup
+### 5. Mobile App Setup
 
 ```bash
 cd blog-mobile
@@ -148,6 +244,8 @@ npm run start:dev
 ```
 
 The backend will be available at `http://localhost:3000` or `http://YOUR_IPv4:3000`
+
+**Note:** The database tables will be created automatically when you first start the backend server.
 
 ### Mobile App
 
@@ -182,6 +280,20 @@ npx expo start --ios
 ```bash
 npx expo start --web
 ```
+
+## Initial Data Setup
+
+After starting both the backend and mobile app for the first time:
+
+1. **Create test posts** through the mobile app to test the CRUD functionality
+2. **Upload images** to posts to test the file upload feature
+3. **Add comments** to posts to test the comments system
+4. **Test the filtering system** by creating posts with different characteristics:
+   - Posts with and without images
+   - Posts with and without comments
+   - View posts to test the "viewed" filter
+
+**Note:** Each developer will start with an empty database. The data you create will be stored locally in your PostgreSQL database.
 
 ## Project Structure
 
